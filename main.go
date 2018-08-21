@@ -29,7 +29,7 @@ func main() {
 	pkCertMap := extractInfoFromCertificates(pathToCertificates)
 	duplicateMap := filterCertMap(pkCertMap)
 
-	jsonData, _ := json.Marshal(duplicateMap)
+	jsonData, _ := json.MarshalIndent(duplicateMap, "", "  ")
 	fmt.Println(string(jsonData))
 }
 
