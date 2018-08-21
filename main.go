@@ -2,33 +2,53 @@ package main
 
 import (
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
 var pathToCertificates = "/Users/gokberkkaraca/workspace/umiacs/certificates/certs_newer_2015/"
+var pkCertMap = make(map[string][]certInfo)
 
-type caFilePair struct {
-	caName   string
-	fileName string
+type certInfo struct {
+	CaName      string `json:"CaName"`
+	SubjectName string `json:"SubjectName"`
+	FileName    string `json:"FileName"`
 }
 
 func main() {
-	list := make(map[string]caFilePair)
+	extractInfoFromCertificates()
+	duplicateMap := filterCertMap()
 
-	fmt.Println("Starting certificate classifier")
+	jsonData, _ := json.Marshal(duplicateMap)
+	fmt.Println(string(jsonData))
+}
+
+func filterCertMap() map[string][]certInfo {
+	var filteredMap = make(map[string][]certInfo)
+	count := 1
+	for _, value := range pkCertMap {
+		newKey := "key_" + strconv.Itoa(count)
+		if len(value) > 1 {
+			filteredMap[newKey] = value
+		}
+		count++
+	}
+
+	return filteredMap
+}
+
+func extractInfoFromCertificates() {
 	files, err := ioutil.ReadDir(pathToCertificates)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("All the certificates in the directory are read")
-	fmt.Println("Starting to parse certificates")
 
-	count := 0
 	for _, file := range files {
 		if file.IsDir() {
 			continue
@@ -41,22 +61,24 @@ func main() {
 		}
 		cert, err := parseCertificateFromFile(inputFile)
 		if err == nil {
-			caName := cert.Issuer.Organization[0]
+			caName := "null"
+			if len(cert.Issuer.Organization) != 0 {
+				caName = cert.Issuer.Organization[0]
+			}
+
+			subjectName := "null"
+			if len(cert.Subject.Organization) != 0 {
+				subjectName = cert.Subject.Organization[0]
+			}
+
 			rawPK := cert.RawSubjectPublicKeyInfo
 			strPK := string(rawPK)
 
-			caFilePairInstance, contains := list[strPK]
-			if contains {
-				fmt.Println("Found duplicate")
-				fmt.Println(caName, caFilePairInstance.caName, file.Name(), caFilePairInstance.fileName)
-				count++
-			} else {
-				list[strPK] = caFilePair{caName: caName, fileName: file.Name()}
-			}
+			certList, _ := pkCertMap[strPK]
+			pkCertMap[strPK] = append(certList, certInfo{CaName: caName, SubjectName: subjectName, FileName: file.Name()})
 		}
 		inputFile.Close()
 	}
-	fmt.Println(count)
 }
 
 func parseCertificateFromFile(inputFile *os.File) (x509.Certificate, error) {
