@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-var pathToCertificates = "/Users/gokberkkaraca/workspace/umiacs/certificates/certs_newer_2015/"
+var pathToCertificates = ""
 var pkCertMap = make(map[string][]certInfo)
 
 type certInfo struct {
@@ -22,6 +22,13 @@ type certInfo struct {
 }
 
 func main() {
+
+	if len(os.Args[1:]) != 1 {
+		log.Fatal("Wrong number of arguments")
+	}
+
+	pathToCertificates = os.Args[1]
+
 	extractInfoFromCertificates()
 	duplicateMap := filterCertMap()
 
