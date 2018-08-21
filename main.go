@@ -12,9 +12,6 @@ import (
 	"strings"
 )
 
-var pathToCertificates = ""
-var pkCertMap = make(map[string][]certInfo)
-
 type certInfo struct {
 	CaName      string `json:"CaName"`
 	SubjectName string `json:"SubjectName"`
@@ -27,16 +24,16 @@ func main() {
 		log.Fatal("Wrong number of arguments")
 	}
 
-	pathToCertificates = os.Args[1]
+	pathToCertificates := os.Args[1]
 
-	extractInfoFromCertificates()
-	duplicateMap := filterCertMap()
+	pkCertMap := extractInfoFromCertificates(pathToCertificates)
+	duplicateMap := filterCertMap(pkCertMap)
 
 	jsonData, _ := json.Marshal(duplicateMap)
 	fmt.Println(string(jsonData))
 }
 
-func filterCertMap() map[string][]certInfo {
+func filterCertMap(pkCertMap map[string][]certInfo) map[string][]certInfo {
 	var filteredMap = make(map[string][]certInfo)
 	count := 1
 	for _, value := range pkCertMap {
@@ -50,11 +47,13 @@ func filterCertMap() map[string][]certInfo {
 	return filteredMap
 }
 
-func extractInfoFromCertificates() {
+func extractInfoFromCertificates(pathToCertificates string) map[string][]certInfo {
 	files, err := ioutil.ReadDir(pathToCertificates)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	pkCertMap := make(map[string][]certInfo)
 
 	for _, file := range files {
 		if file.IsDir() {
@@ -86,6 +85,8 @@ func extractInfoFromCertificates() {
 		}
 		inputFile.Close()
 	}
+
+	return pkCertMap
 }
 
 func parseCertificateFromFile(inputFile *os.File) (x509.Certificate, error) {
