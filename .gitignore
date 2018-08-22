@@ -11,3 +11,5 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 main
+x509-public-key-comparison
+public_key_comparison_results.json

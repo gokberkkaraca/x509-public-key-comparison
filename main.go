@@ -13,9 +13,10 @@ import (
 )
 
 type certInfo struct {
-	CaName      string `json:"CaName"`
-	SubjectName string `json:"SubjectName"`
-	FileName    string `json:"FileName"`
+	CaName       string `json:"CaName"`
+	SubjectName  string `json:"SubjectName"`
+	FileName     string `json:"FileName"`
+	SerialNumber string `json:"SerialNumber"`
 }
 
 func main() {
@@ -80,8 +81,10 @@ func extractInfoFromCertificates(pathToCertificates string) map[string][]certInf
 			rawPK := cert.RawSubjectPublicKeyInfo
 			strPK := string(rawPK)
 
+			serialNumber := cert.SerialNumber.String()
+
 			certList, _ := pkCertMap[strPK]
-			pkCertMap[strPK] = append(certList, certInfo{CaName: caName, SubjectName: subjectName, FileName: file.Name()})
+			pkCertMap[strPK] = append(certList, certInfo{CaName: caName, SubjectName: subjectName, FileName: file.Name(), SerialNumber: serialNumber})
 		}
 		inputFile.Close()
 	}
