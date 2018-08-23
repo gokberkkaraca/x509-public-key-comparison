@@ -1,31 +1,25 @@
-import subprocess
+import json
 
-serial_number_file = "serial_numbers.txt"
-revocation_list_file = "revocation_list.txt"
-crl_points_list_file = "crl_points.txt"
+certificate_data = json.loads(open('public_key_comparison_results.json').read())
 
-with open(crl_points_list_file) as file:
-    crl_points = [line.rstrip('\n') for line in file]
-    crl_points = set(crl_points)
+def perform_crl_check(certificate):
+    print("CRL")
 
-for crl_point in crl_points:
-    bashCommand = 'wget -O crl.der ' + crl_point
-    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    bashCommand = "openssl crl -inform DER -in crl.der -outform PEM -out crl.pem"
-    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    bashCommand = "openssl crl -in crl.pem -noout -text >> revocation_list.txt"
-    output = subprocess.check_output(['bash', '-c', bashCommand])
+def perform_ocsp_check(certificate):
+    print("OCSP")
 
-with open(serial_number_file) as file:
-    suspicious_serial_numbers = [line.rstrip('\n') for line in file]
-
-with open(revocation_list_file) as file:
-    revoced_serial_numbers = [line.rstrip('\n') for line in file]
-    revoced_serial_numbers = [serial_number.split(" ")[6] for serial_number in revoced_serial_numbers if "Serial Number: " in serial_number]
-
-for serial_number in suspicious_serial_numbers:
-    result = (serial_number.upper() in list(map(lambda item: item.upper(), revoced_serial_numbers)))
-    if result:
-        print("Found revoked certificate: ", serial_number)
+for public_key, certificate_set in certificate_data.items():
+    total_num_of_certificates = len(certificate_set)
+    num_of_revoced_certificates = 0
+    num_of_unknown_certificates = 0
+    for certificate in certificate_set:
+        is_ocsp_available = type(certificate["OCSP"]) == list and len(certificate["OCSP"]) > 0
+        is_crl_available = type(certificate["CrlPoints"]) == list and len(certificate["CrlPoints"]) > 0
+        if not(is_crl_available) and not(is_ocsp_available):
+            print("Unknown")
+            continue
+        else:
+            if is_ocsp_available:
+                perform_ocsp_check(certificate)
+            else:
+                perform_crl_check(certificate)
