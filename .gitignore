@@ -13,3 +13,4 @@
 main
 x509-public-key-comparison
 public_key_comparison_results.json
+certificates/
