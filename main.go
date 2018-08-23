@@ -20,6 +20,7 @@ type certInfo struct {
 	OCSP                  []string `json:"OCSP"`
 	CrlPoints             []string `json:"CrlPoints"`
 	IssuingCertificateURL []string `json:"IssuingCertificateURL"`
+	RevocationStatus      string   `json:RevocationStatus"`
 }
 
 func main() {
@@ -88,9 +89,10 @@ func extractInfoFromCertificates(pathToCertificates string) map[string][]certInf
 			OCSP := cert.OCSPServer
 			CrlPoints := cert.CRLDistributionPoints
 			IssuingCertificateURL := cert.IssuingCertificateURL
+			revocationStatus := "Unknown"
 
 			certList, _ := pkCertMap[strPK]
-			pkCertMap[strPK] = append(certList, certInfo{CaName: caName, SubjectName: subjectName, FileName: file.Name(), SerialNumber: serialNumber, OCSP: OCSP, CrlPoints: CrlPoints, IssuingCertificateURL: IssuingCertificateURL})
+			pkCertMap[strPK] = append(certList, certInfo{CaName: caName, SubjectName: subjectName, FileName: file.Name(), SerialNumber: serialNumber, OCSP: OCSP, CrlPoints: CrlPoints, IssuingCertificateURL: IssuingCertificateURL, RevocationStatus: revocationStatus})
 		}
 		inputFile.Close()
 	}
