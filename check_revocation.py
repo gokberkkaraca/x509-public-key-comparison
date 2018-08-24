@@ -5,8 +5,43 @@ import os
 
 certificate_data = json.loads(open('public_key_comparison_results.json').read())
 
+def clean_after_certificate():
+    # Clean directory
+    if os.path.exists("chain.crt"):
+        os.remove("chain.crt")
+    if os.path.exists("chain.pem"):
+        os.remove("chain.pem")
+    if os.path.exists("crl_list.der"):
+        os.remove("crl_list.der")
+    if os.path.exists("crl_list.pem"):
+        os.remove("crl_list.pem")
+
 def perform_crl_check(certificate):
-    return ("Unknown") # TODO Implement CRL check
+    is_failed = False
+    for crl_point in certificate["CrlPoints"]:
+        completed_process = subprocess.run(("wget -O crl_list.der " + crl_point).split(), capture_output=True)
+        if completed_process.returncode != 0:
+            is_failed = True
+            continue
+        
+        completed_process = subprocess.run("openssl crl -inform DER -in crl_list.der -outform PEM -out crl_list.pem".split(), capture_output=True)
+        if completed_process.returncode != 0:
+            is_failed = True
+            continue
+        
+        completed_process = subprocess.run("openssl crl -in crl_list.pem -noout -text".split(), text=True, capture_output=True)
+        if completed_process.returncode != 0:
+            is_failed = True
+            continue
+        revoced_certificates = [line.split(":")[1][1:].upper() for line in completed_process.stdout.splitlines() if "Serial Number:" in line]
+        serial_number = certificate["FileName"].split(".pem")[0].split("_")[0].upper()
+        if serial_number in revoced_certificates:
+            return "Revoked"
+        
+    if is_failed:
+        return "Unknown"
+    else:
+        return "Good"
 
 def perform_ocsp_check(certificate):
     # Get certificate chain
@@ -38,9 +73,6 @@ def perform_ocsp_check(certificate):
         return (results[0].split(' ')[1]).capitalize()
 
 for public_key, certificate_set in certificate_data.items():
-    total_num_of_certificates = len(certificate_set)
-    num_of_revoced_certificates = 0
-    num_of_unknown_certificates = 0
     for certificate in certificate_set:
         revocation_status = "Unknown"
         is_ocsp_available = type(certificate["OCSP"]) == list and len(certificate["OCSP"]) > 0
@@ -52,15 +84,10 @@ for public_key, certificate_set in certificate_data.items():
                 revocation_status = perform_ocsp_check(certificate)
             
             if revocation_status == "Unknown" and is_crl_available:
-                perform_crl_check(certificate)
+                revocation_status = perform_crl_check(certificate)
 
         certificate["RevocationStatus"] = revocation_status
-        print(revocation_status)
-        # Clean directory
-        if os.path.exists("chain.crt"):
-            os.remove("chain.crt")
-        if os.path.exists("chain.pem"):
-            os.remove("chain.pem")
+        clean_after_certificate()
 
 os.remove("public_key_comparison_results.json")
 with open("public_key_comparison_results.json", 'w') as file:
