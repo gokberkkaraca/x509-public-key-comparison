@@ -16,7 +16,6 @@ type certInfo struct {
 	CaName                string   `json:"CaName"`
 	SubjectName           string   `json:"SubjectName"`
 	FileName              string   `json:"FileName"`
-	SerialNumber          string   `json:"SerialNumber"`
 	OCSP                  []string `json:"OCSP"`
 	CrlPoints             []string `json:"CrlPoints"`
 	IssuingCertificateURL []string `json:"IssuingCertificateURL"`
@@ -85,14 +84,13 @@ func extractInfoFromCertificates(pathToCertificates string) map[string][]certInf
 			rawPK := cert.RawSubjectPublicKeyInfo
 			strPK := string(rawPK)
 
-			serialNumber := cert.SerialNumber.String()
 			OCSP := cert.OCSPServer
 			CrlPoints := cert.CRLDistributionPoints
 			IssuingCertificateURL := cert.IssuingCertificateURL
 			revocationStatus := "Unknown"
 
 			certList, _ := pkCertMap[strPK]
-			pkCertMap[strPK] = append(certList, certInfo{CaName: caName, SubjectName: subjectName, FileName: file.Name(), SerialNumber: serialNumber, OCSP: OCSP, CrlPoints: CrlPoints, IssuingCertificateURL: IssuingCertificateURL, RevocationStatus: revocationStatus})
+			pkCertMap[strPK] = append(certList, certInfo{CaName: caName, SubjectName: subjectName, FileName: file.Name(), OCSP: OCSP, CrlPoints: CrlPoints, IssuingCertificateURL: IssuingCertificateURL, RevocationStatus: revocationStatus})
 		}
 		inputFile.Close()
 	}
