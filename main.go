@@ -20,7 +20,7 @@ type certInfo struct {
 	OCSP                  []string `json:"OCSP"`
 	CrlPoints             []string `json:"CrlPoints"`
 	IssuingCertificateURL []string `json:"IssuingCertificateURL"`
-	Revocation            string   `json:"RevocationStatus"`
+	RevocationStatus      string   `json:"RevocationStatus"`
 }
 
 func main() {
