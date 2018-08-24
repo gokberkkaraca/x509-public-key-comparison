@@ -50,7 +50,6 @@ def perform_ocsp_check(certificate):
         return "Unknown" # Chain certificates are missing, return Unknown status
 
     if len(chain_cert_url_list) > 1:
-        print("Warning: More than one chain cert.", certificate["FileName"])
         return "Unknown" # TODO Need to merge chain certificates, implement later in the for loop below
 
     for chain_cert_url in chain_cert_url_list:

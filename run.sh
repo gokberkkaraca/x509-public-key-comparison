@@ -7,5 +7,5 @@ fi
 
 go build
 ./x509-public-key-comparison $1 > public_key_comparison_results.json
-python3 analyze.py
 python3 check_revocation.py
+python3 analyze.py
