@@ -26,8 +26,10 @@ def perform_crl_check(certificate):
         
         completed_process = subprocess.run("openssl crl -inform DER -in crl_list.der -outform PEM -out crl_list.pem".split(), capture_output=True)
         if completed_process.returncode != 0:
-            is_failed = True
-            continue
+            completed_process = subprocess.run(("openssl crl -inform PEM -in crl_list.der -outform PEM -out crl_list.pem".split()), capture_output=True)
+            if completed_process.returncode != 0:
+                is_failed = True
+                continue
         
         completed_process = subprocess.run("openssl crl -in crl_list.pem -noout -text".split(), text=True, capture_output=True)
         if completed_process.returncode != 0:
