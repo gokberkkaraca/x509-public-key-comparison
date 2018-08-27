@@ -35,4 +35,39 @@ for result in certificate_data.values():
 
 print(num_of_keys_used_by_different_ca,  "public keys have more than one issuer")
 print(num_of_keys_used_by_different_subject, "public keys have more than one subject")
-print(num_of_keys_used_by_different_subject_and_different_ca, "public keys have more than one subject and more than one issuer at the same time")
+print(num_of_keys_used_by_different_subject_and_different_ca, "public keys have more than one subject and more than one issuer at the same time\n")
+
+total_num_of_good = 0
+total_num_of_unknown = 0
+total_num_of_revoked = 0
+num_of_good_keys = 0
+for key, value in certificate_data.items():
+    num_of_good = 0
+    num_of_revoked = 0
+    num_of_unknown = 0
+
+    for result in value:
+        status = result["RevocationStatus"]
+        if status == "Good":
+            total_num_of_good += 1
+            num_of_good += 1
+        elif status == "Revoked":
+            total_num_of_revoked += 1
+            num_of_revoked += 1
+        elif status == "Unknown":
+            total_num_of_unknown += 1
+            num_of_unknown += 1
+
+    if num_of_good != len(value):
+        print("{} number of total certificates".format(key), len(value))
+        print("{} number of good certificates:".format(key), num_of_good)
+        print("{} number of revoked certificates:".format(key), num_of_revoked)
+        print("{} number of unknown certificates:".format(key), num_of_unknown)
+        print("\n")
+    else:
+        num_of_good_keys += 1
+
+print("Total number of good certificates:", total_num_of_good)
+print("Total number of revoked certificates:", total_num_of_revoked)
+print("Total number of unknown certificates:", total_num_of_unknown)
+print("Number of good keys:", num_of_good_keys)
