@@ -71,3 +71,19 @@ print("Total number of good certificates:", total_num_of_good)
 print("Total number of revoked certificates:", total_num_of_revoked)
 print("Total number of unknown certificates:", total_num_of_unknown)
 print("Number of good keys:", num_of_good_keys)
+
+keys_shared_between_cas = []
+ca_frequency_list = []
+for key, value in certificate_data.items():
+    ca_set = set(map(lambda result: result["CaName"], value))
+    ca_set = set(map(lambda ca_name: "Thawte" if "thawte" in ca_name.lower() else ca_name, ca_set))
+    ca_set = set(map(lambda ca_name: "NetLock" if "netlock" in ca_name.lower() else ca_name, ca_set))
+    if len(ca_set) > 1:
+        print(key, ca_set)
+        ca_frequency_list.append(frozenset(ca_set))
+        keys_shared_between_cas.append(key)
+
+print(len(keys_shared_between_cas))
+print(len(ca_frequency_list))
+for key, value in sorted(Counter(ca_frequency_list).items(), key=lambda x: x[1], reverse=True):
+    print(key, value)
